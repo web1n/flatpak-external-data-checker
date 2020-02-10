@@ -16,6 +16,7 @@ RUN apt-get update \
       python3-coverage \
       python3-gi \
       python3-github \
+      python3-lxml \
       python3-pip \
       python3-pygit2 \
       python3-ruamel.yaml \

@@ -19,22 +19,23 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import unittest
-from io import StringIO
+from io import BytesIO
 
 from src.lib.appdata import add_release
 
 
 class TestAddRelease(unittest.TestCase):
     def _do_test(self, before, expected):
-        in_ = StringIO(before)
-        out = StringIO()
+        in_ = BytesIO(before.encode("utf-8"))
+        out = BytesIO()
         add_release(in_, out, "4.5.6", "2020-02-02")
-        self.assertMultiLineEqual(out.getvalue(), expected)
+        actual = out.getvalue().decode("utf-8")
+        self.assertMultiLineEqual(expected, actual)
 
     def test_simple(self):
         self._do_test(
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <releases>
     <release version="1.2.3" date="2019-01-01"/>
@@ -42,7 +43,7 @@ class TestAddRelease(unittest.TestCase):
 </component>
             """.strip(),
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <releases>
     <release version="4.5.6" date="2020-02-02"/>
@@ -57,7 +58,7 @@ class TestAddRelease(unittest.TestCase):
         for another. Match the top one."""
         self._do_test(
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
    <releases>
       <release version="1.2.3" date="2019-01-01"/>
@@ -66,7 +67,7 @@ class TestAddRelease(unittest.TestCase):
 </component>
             """.strip(),
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
    <releases>
       <release version="4.5.6" date="2020-02-02"/>
@@ -84,7 +85,7 @@ class TestAddRelease(unittest.TestCase):
         10-8 split."""
         self._do_test(
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <releases>
     <release date="2019-01-01" version="1.2.3"/>
@@ -92,7 +93,7 @@ class TestAddRelease(unittest.TestCase):
 </component>
             """.strip(),
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <releases>
     <release date="2020-02-02" version="4.5.6"/>
@@ -105,7 +106,7 @@ class TestAddRelease(unittest.TestCase):
     def test_comment(self):
         self._do_test(
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <!-- I am the walrus -->
   <releases>
@@ -114,7 +115,7 @@ class TestAddRelease(unittest.TestCase):
 </component>
             """.strip(),
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <!-- I am the walrus -->
   <releases>
@@ -128,12 +129,12 @@ class TestAddRelease(unittest.TestCase):
     def test_no_releases(self):
         self._do_test(
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
 </component>
             """.strip(),
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <releases>
     <release version="4.5.6" date="2020-02-02"/>
@@ -146,13 +147,13 @@ class TestAddRelease(unittest.TestCase):
         """No whitespace is generated between <release /> and </releases>."""
         self._do_test(
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <releases/>
 </component>
             """.strip(),
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <releases>
     <release version="4.5.6" date="2020-02-02"/>
@@ -165,7 +166,7 @@ class TestAddRelease(unittest.TestCase):
     def test_double_comment_within_root(self):
         self._do_test(
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <application>
 <!-- Copyright 2019 Rupert Monkey <rupert@gnome.org> -->
  <!--
@@ -175,7 +176,7 @@ SentUpstream: 2014-05-22
 </application>
             """.strip(),
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <application>
 <!-- Copyright 2019 Rupert Monkey <rupert@gnome.org> -->
  <!--
@@ -198,7 +199,7 @@ SentUpstream: 2014-05-22
 
         self._do_test(
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <!-- Copyright 2019 Rupert Monkey <rupert@gnome.org> -->
 <!--
 EmailAddress: billg@example.com
@@ -208,7 +209,7 @@ SentUpstream: 2014-05-22
 </application>
             """.strip(),
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <!-- Copyright 2019 Rupert Monkey <rupert@gnome.org> -->
 <!--
 EmailAddress: billg@example.com
@@ -225,13 +226,13 @@ SentUpstream: 2014-05-22
     def test_amp_as_amp(self):
         self._do_test(
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <name>🍦 &amp; 🎂</name>
 </component>
             """.strip(),
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <name>🍦 &amp; 🎂</name>
   <releases>
@@ -246,13 +247,13 @@ SentUpstream: 2014-05-22
         """&#38; becomes &amp;."""
         self._do_test(
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <name>🦝 &#38; 🍒</name>
 </component>
             """.strip(),
             """
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <component type="desktop">
   <name>🦝 &#38; 🍒</name>
   <releases>

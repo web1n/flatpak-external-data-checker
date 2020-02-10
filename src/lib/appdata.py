@@ -125,6 +125,7 @@ class VerbatimLexicalHandler:
         raise NotImplementedError
 
 
+"""
 def add_release(in_path_or_stream, out, version, date):
     reader = AddVersionFilter(version, date, make_parser())
     lexical_handler = VerbatimLexicalHandler(reader, out)
@@ -132,6 +133,23 @@ def add_release(in_path_or_stream, out, version, date):
     reader.setContentHandler(handler)
     reader.setProperty(property_lexical_handler, lexical_handler)
     reader.parse(in_path_or_stream)
+"""
+
+def add_release(in_path_or_stream, out, version, date):
+    import lxml.etree
+    from copy import deepcopy
+
+    tree = lxml.etree.parse(in_path_or_stream)
+    releases = tree.find("releases")
+    new_release = lxml.etree.Element("release", version=version, date=date)
+    if releases is None:
+        releases = lxml.etree.SubElement(tree.getroot(), "releases")
+    if len(releases):
+        most_recent_release = releases[0]
+        new_release.tail = most_recent_release.tail
+    releases.insert(0, new_release)
+
+    tree.write(out, xml_declaration=True, encoding=tree.docinfo.encoding)
 
 
 def add_release_to_file(appdata_path, version, date):
