@@ -35,6 +35,7 @@ import shlex
 from pathlib import Path
 import operator
 
+from apt.debfile import DebPackage
 from collections import OrderedDict
 from ruamel.yaml import YAML
 from elftools.elf.elffile import ELFFile
@@ -447,6 +448,16 @@ async def extract_appimage_version(appimg_io: t.IO):
             kf = GLib.KeyFile()
             kf.load_from_file(str(desktop), GLib.KeyFileFlags.NONE)
             return kf.get_string(GLib.KEY_FILE_DESKTOP_GROUP, "X-AppImage-Version")
+
+
+async def extract_deb_version(deb_io: t.IO):
+    assert deb_io.name
+
+    deb = DebPackage(deb_io.name)
+    # if not deb.check():
+    #     raise ValueError("The .deb file is invalid or corrupted.")
+
+    return deb._sections.get("Version")
 
 
 _GITHUB_URL_PATTERN = re.compile(
